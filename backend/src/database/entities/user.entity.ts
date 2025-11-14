@@ -1,4 +1,4 @@
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
 import { TenantScopedEntity } from './tenant-scoped.entity';
 import { Role } from './role.entity';
 import { Branch } from './branch.entity';
@@ -27,6 +27,7 @@ export class User extends TenantScopedEntity {
   phone!: string | null;
 
   @ManyToOne(() => Branch, (branch) => branch.users)
+  @JoinColumn({ name: 'branch_id' })
   branch!: Branch;
 
   @ManyToMany(() => Role, { cascade: true })
