@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { v4 as uuid } from 'uuid';
-import { fetchProducts } from '../../api/services/inventory';
+import { fetchProducts, type ProductListResponse, type Product } from '../../api/services/inventory';
 import { createSale } from '../../api/services/sales';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
@@ -23,11 +23,12 @@ export function POSPage() {
   const { isOffline } = useAppSelector((state) => state.auth);
   const [search, setSearch] = useState('');
 
-  const { data: products } = useQuery({
+  const { data: productsResponse } = useQuery<ProductListResponse>({
     queryKey: ['products', search],
     queryFn: () => fetchProducts({ search, limit: 20 }),
-    keepPreviousData: true
+    placeholderData: (previousData) => previousData
   });
+  const products = productsResponse?.data ?? [];
 
   const mutation = useMutation({
     mutationFn: createSale,
@@ -54,7 +55,7 @@ export function POSPage() {
     return { subtotal, tax, discount, grandTotal, paid, balance: grandTotal - paid };
   }, [cart, payments]);
 
-  const handleAddProduct = (product: any) => {
+  const handleAddProduct = (product: Product) => {
     dispatch(
       addItem({
         id: product.id,
@@ -104,7 +105,7 @@ export function POSPage() {
           />
         </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {products?.data?.map((product: any) => (
+          {products.map((product) => (
             <button
               key={product.id}
               type="button"

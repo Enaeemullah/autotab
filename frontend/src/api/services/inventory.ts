@@ -1,13 +1,36 @@
 import { apiClient } from '../client';
 
+export interface Product {
+  id: string;
+  name: string;
+  sku: string;
+  salePrice?: number;
+  sale_price?: number;
+  taxRate?: number;
+  tax_rate?: number;
+  currentStock?: number;
+  current_stock?: number;
+}
+
 export interface ProductFilter {
   page?: number;
   limit?: number;
   search?: string;
 }
 
-export async function fetchProducts(filter: ProductFilter = {}) {
-  const { data } = await apiClient.get('/inventory/products', { params: filter });
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta?: {
+    total: number;
+    page: number;
+    limit: number;
+  };
+}
+
+export type ProductListResponse = PaginatedResponse<Product>;
+
+export async function fetchProducts(filter: ProductFilter = {}): Promise<ProductListResponse> {
+  const { data } = await apiClient.get<ProductListResponse>('/inventory/products', { params: filter });
   return data;
 }
 

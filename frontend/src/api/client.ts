@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosHeaders } from 'axios';
 import { store } from '../store';
 import { logout, loginSuccess } from '../store/slices/authSlice';
 
@@ -10,19 +10,18 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use((config) => {
   const state = store.getState();
   const token = state.auth.accessToken;
+  const headers = AxiosHeaders.from(config.headers ?? {});
+
   if (token) {
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`
-    };
+    headers.set('Authorization', `Bearer ${token}`);
   }
+
   if (state.auth.tenant?.id) {
-    config.headers = {
-      ...config.headers,
-      'x-tenant-id': state.auth.tenant.id,
-      'x-branch-id': state.auth.branchId ?? ''
-    };
+    headers.set('x-tenant-id', state.auth.tenant.id);
+    headers.set('x-branch-id', state.auth.branchId ?? '');
   }
+
+  config.headers = headers;
   return config;
 });
 
@@ -42,7 +41,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const { response, config } = error;
-    if (!response || response.status !== 401) {
+    if (!response || response.status !== 401 || !config) {
       return Promise.reject(error);
     }
 
@@ -56,7 +55,9 @@ apiClient.interceptors.response.use(
     if (isRefreshing) {
       return new Promise((resolve) => {
         subscribeTokenRefresh((token) => {
-          config.headers.Authorization = `Bearer ${token}`;
+          const headers = AxiosHeaders.from(config.headers ?? {});
+          headers.set('Authorization', `Bearer ${token}`);
+          config.headers = headers;
           resolve(apiClient(config));
         });
       });
@@ -86,7 +87,9 @@ apiClient.interceptors.response.use(
         })
       );
       onRefreshed(tokens.accessToken);
-      config.headers.Authorization = `Bearer ${tokens.accessToken}`;
+      const headers = AxiosHeaders.from(config.headers ?? {});
+      headers.set('Authorization', `Bearer ${tokens.accessToken}`);
+      config.headers = headers;
       return apiClient(config);
     } catch (refreshError) {
       store.dispatch(logout());
