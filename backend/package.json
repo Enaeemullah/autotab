@@ -10,7 +10,8 @@
     "lint": "eslint \"src/**/*.ts\"",
     "test": "jest --runInBand",
     "migration:run": "ts-node ./src/database/migrations/run-migrations.ts",
-    "migration:generate": "ts-node ./src/database/migrations/generate-migration.ts"
+    "migration:generate": "ts-node ./src/database/migrations/generate-migration.ts",
+    "seed:test": "ts-node ./src/database/seeders/test-users.seeder.ts"
   },
   "engines": {
     "node": ">=18.0.0"

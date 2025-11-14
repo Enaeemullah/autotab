@@ -48,6 +48,7 @@ npm run dev
 | `npm test` | Execute Jest tests |
 | `npm run migration:run` | Apply database migrations to the database defined in `.env` |
 | `npm run migration:generate -- <name>` | Scaffold a timestamped migration template under `src/database/migrations` |
+| `npm run seed:test` | Seed a demo tenant plus admin/manager/cashier users for local testing |
 
 ### Environment Variables
 
@@ -78,6 +79,20 @@ tests/            # Jest test suites
 2. **Generate a template** – run `npm run migration:generate -- add-reporting-indexes` to create a new timestamped file under `src/database/migrations`. Fill in the `up`/`down` methods with the SQL statements you need.
 3. **Apply migrations** – execute `npm run migration:run` to apply every pending migration to the configured database.
 4. **Verify** – inspect the console output for `Migrations executed successfully`. Errors usually indicate missing env vars or that PostgreSQL is not reachable.
+
+### Demo Test Data
+
+After running migrations you can populate a ready-to-use tenant with sample users:
+
+```bash
+npm run seed:test
+```
+
+This creates the `Demo Retail Co.` tenant with three accounts:
+
+- `admin@demo-retail.test` / `Admin123!`
+- `manager@demo-retail.test` / `Manager123!`
+- `cashier@demo-retail.test` / `Cashier123!`
 
 ## Synchronization Workflow
 

@@ -6,49 +6,11 @@ import { Role } from '../../database/entities/role.entity';
 import { Permission } from '../../database/entities/permission.entity';
 import { User } from '../../database/entities/user.entity';
 import { registerTenantSchema } from './tenancy.schemas';
-
-const DEFAULT_PERMISSIONS = [
-  { resource: 'users', action: 'read' },
-  { resource: 'users', action: 'create' },
-  { resource: 'users', action: 'update' },
-  { resource: 'users', action: 'delete' },
-  { resource: 'roles', action: 'read' },
-  { resource: 'roles', action: 'create' },
-  { resource: 'roles', action: 'update' },
-  { resource: 'roles', action: 'delete' },
-  { resource: 'products', action: 'read' },
-  { resource: 'products', action: 'create' },
-  { resource: 'products', action: 'update' },
-  { resource: 'products', action: 'delete' },
-  { resource: 'suppliers', action: 'read' },
-  { resource: 'suppliers', action: 'create' },
-  { resource: 'inventory', action: 'read' },
-  { resource: 'inventory', action: 'create' },
-  { resource: 'sales', action: 'read' },
-  { resource: 'sales', action: 'create' },
-  { resource: 'reports', action: 'read' },
-  { resource: 'settings', action: 'read' },
-  { resource: 'settings', action: 'update' },
-  { resource: 'sync', action: 'read' },
-  { resource: 'sync', action: 'write' }
-];
-
-const ROLE_PERMISSION_MAP: Record<string, Array<{ resource: string; action: string }>> = {
-  admin: DEFAULT_PERMISSIONS,
-  manager: DEFAULT_PERMISSIONS.filter(
-    (permission) =>
-      !['users:delete', 'roles:delete', 'settings:update', 'sync:write'].includes(
-        `${permission.resource}:${permission.action}`
-      )
-  ),
-  cashier: [
-    { resource: 'sales', action: 'read' },
-    { resource: 'sales', action: 'create' },
-    { resource: 'products', action: 'read' },
-    { resource: 'inventory', action: 'read' },
-    { resource: 'reports', action: 'read' }
-  ]
-};
+import {
+  DEFAULT_PERMISSIONS,
+  ROLE_NAME_MAP,
+  ROLE_PERMISSION_MAP
+} from './tenancy.constants';
 
 export class TenancyService {
   async register(payload: unknown) {
@@ -95,25 +57,24 @@ export class TenancyService {
         });
         permissions.push(await permissionRepo.save(entity));
       }
-
-      const roles: Record<string, Role> = {};
-      for (const [roleKey, perms] of Object.entries(ROLE_PERMISSION_MAP)) {
-        const role = roleRepo.create({
-          tenantId: tenant.id,
-          branchId: null,
-          name: roleKey === 'admin' ? 'Administrator' : roleKey === 'manager' ? 'Manager' : 'Cashier',
-          slug: roleKey,
-          isSystem: true,
-          syncState: 'pending'
-        });
-        role.permissions = permissions.filter((permission) =>
-          perms.some(
-            (perm) =>
-              perm.resource === permission.resource && perm.action === permission.action
-          )
-        );
-        roles[roleKey] = await roleRepo.save(role);
-      }
+        const roles: Record<string, Role> = {};
+        for (const [roleKey, perms] of Object.entries(ROLE_PERMISSION_MAP)) {
+          const role = roleRepo.create({
+            tenantId: tenant.id,
+            branchId: null,
+            name: ROLE_NAME_MAP[roleKey as keyof typeof ROLE_NAME_MAP],
+            slug: roleKey,
+            isSystem: true,
+            syncState: 'pending'
+          });
+          role.permissions = permissions.filter((permission) =>
+            perms.some(
+              (perm) =>
+                perm.resource === permission.resource && perm.action === permission.action
+            )
+          );
+          roles[roleKey] = await roleRepo.save(role);
+        }
 
       const passwordHash = await bcrypt.hash(parsed.adminUser.password, 12);
       const adminUser = userRepo.create({
