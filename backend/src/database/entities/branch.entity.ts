@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { TenantScopedEntity } from './tenant-scoped.entity';
 import { Tenant } from './tenant.entity';
 import { User } from './user.entity';
@@ -25,6 +25,7 @@ export class Branch extends TenantScopedEntity {
   isActive!: boolean;
 
   @ManyToOne(() => Tenant, (tenant) => tenant.branches)
+  @JoinColumn({ name: 'tenant_id' })
   tenant!: Tenant;
 
   @OneToMany(() => User, (user) => user.branch)
