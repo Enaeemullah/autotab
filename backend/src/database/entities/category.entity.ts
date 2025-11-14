@@ -1,6 +1,5 @@
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { TenantScopedEntity } from './tenant-scoped.entity';
-import { Category } from './category.entity';
 import { Product } from './product.entity';
 
 @Entity({ name: 'categories' })

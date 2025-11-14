@@ -46,7 +46,8 @@ npm run dev
 | `npm start` | Run compiled server from `dist` |
 | `npm run lint` | Lint the source using ESLint |
 | `npm test` | Execute Jest tests |
-| `npm run migration:run` | Apply database migrations |
+| `npm run migration:run` | Apply database migrations to the database defined in `.env` |
+| `npm run migration:generate -- <name>` | Scaffold a timestamped migration template under `src/database/migrations` |
 
 ### Environment Variables
 
@@ -70,6 +71,13 @@ src/
   routes/         # Route registration
 tests/            # Jest test suites
 ```
+
+## Database Migrations
+
+1. **Configure access** – ensure PostgreSQL is running and `.env` contains valid `POSTGRES_*` credentials for the database you want to migrate.
+2. **Generate a template** – run `npm run migration:generate -- add-reporting-indexes` to create a new timestamped file under `src/database/migrations`. Fill in the `up`/`down` methods with the SQL statements you need.
+3. **Apply migrations** – execute `npm run migration:run` to apply every pending migration to the configured database.
+4. **Verify** – inspect the console output for `Migrations executed successfully`. Errors usually indicate missing env vars or that PostgreSQL is not reachable.
 
 ## Synchronization Workflow
 

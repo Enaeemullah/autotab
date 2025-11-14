@@ -39,9 +39,22 @@ Key features:
    cd backend
    cp .env.example .env       # set POSTGRES_* and JWT secrets
    npm install
-   npm run migration:run
+   npm run migration:run      # applies SQL to the database configured in .env
    npm run dev                # serves http://localhost:4000
    ```
+
+   **Database migrations**
+
+   - Ensure PostgreSQL is running and `.env` points to the correct database.
+   - Create a template for a new migration (fill in the SQL inside the generated file):
+     ```bash
+     npm run migration:generate -- add-products-indexes
+     ```
+   - Apply all pending migrations to the configured database:
+     ```bash
+     npm run migration:run
+     ```
+   - If you need to start over locally, drop the database manually and re-run `npm run migration:run`.
 
 4. **Frontend PWA (`frontend/`)**
    ```bash
