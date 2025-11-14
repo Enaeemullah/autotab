@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import dayjs from 'dayjs';
+import dayjs, { ManipulateType } from 'dayjs';
+import { Role } from '../../database/entities/role.entity';
 import { AppDataSource } from '../../database/data-source';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { User } from '../../database/entities/user.entity';
@@ -12,6 +13,44 @@ interface AuthTokens {
   refreshToken: string;
   expiresIn: number;
   refreshExpiresIn: number;
+}
+
+type ExpiryUnitShorthand = 'ms' | 's' | 'm' | 'h' | 'd' | 'w' | 'y';
+
+const JWT_EXPIRY_REGEX = /^(\d+)(ms|s|m|h|d|w|y)$/i;
+const EXPIRY_UNIT_MAP: Record<ExpiryUnitShorthand, ManipulateType> = {
+  ms: 'millisecond',
+  s: 'second',
+  m: 'minute',
+  h: 'hour',
+  d: 'day',
+  w: 'week',
+  y: 'year'
+};
+
+function resolveExpiry(value: string): { amount: number; unit: ManipulateType } {
+  const trimmed = value.trim();
+  const match = JWT_EXPIRY_REGEX.exec(trimmed);
+
+  if (match) {
+    const [, amount, shorthandUnit] = match;
+    const unit = EXPIRY_UNIT_MAP[shorthandUnit.toLowerCase() as ExpiryUnitShorthand];
+    return { amount: Number(amount), unit };
+  }
+
+  const numericValue = Number(trimmed);
+  if (!Number.isNaN(numericValue) && numericValue >= 0) {
+    return { amount: numericValue, unit: 'second' };
+  }
+
+  throw new Error(
+    `Invalid JWT expiry format: "${value}". Use formats like "15m", "7d", or provide the total seconds.`
+  );
+}
+
+function calculateExpiryTimestamp(expiry: string): number {
+  const { amount, unit } = resolveExpiry(expiry);
+  return dayjs().add(amount, unit).unix();
 }
 
 export class AuthService {
@@ -61,8 +100,8 @@ export class AuthService {
       expiresIn: env.JWT_REFRESH_EXPIRY
     });
 
-    const expiresIn = dayjs().add(dayjs.duration(env.JWT_EXPIRY)).unix();
-    const refreshExpiresIn = dayjs().add(dayjs.duration(env.JWT_REFRESH_EXPIRY)).unix();
+    const expiresIn = calculateExpiryTimestamp(env.JWT_EXPIRY);
+    const refreshExpiresIn = calculateExpiryTimestamp(env.JWT_REFRESH_EXPIRY);
 
     return {
       accessToken,
