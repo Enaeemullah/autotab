@@ -28,16 +28,23 @@ export function Topbar() {
     loadBranches();
   }, [auth.tenant?.id]);
 
+  const isSuperAdmin = auth.user?.roles?.includes('superadmin') || auth.user?.permissions?.includes('*');
+
   return (
     <header className="flex items-center justify-between border-b border-slate-800 bg-slate-950/60 px-6 py-4">
       <div>
         <h2 className="text-lg font-semibold text-slate-100">
-          {auth.tenant?.name ?? 'Autotab POS'}
+          {isSuperAdmin ? 'Superadmin Panel' : auth.tenant?.name ?? 'Autotab POS'}
         </h2>
-        <p className="text-sm text-slate-400">
-          Branch:{' '}
-          {branches.find((branch) => branch.id === auth.branchId)?.name ?? 'All locations'}
-        </p>
+        {!isSuperAdmin && (
+          <p className="text-sm text-slate-400">
+            Branch:{' '}
+            {branches.find((branch) => branch.id === auth.branchId)?.name ?? 'All locations'}
+          </p>
+        )}
+        {isSuperAdmin && (
+          <p className="text-sm text-slate-400">Manage all tenants and organizations</p>
+        )}
       </div>
       <div className="flex items-center gap-4">
         <div className="hidden md:flex flex-col text-right">

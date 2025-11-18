@@ -5,7 +5,16 @@ import { logger } from './utils/logger';
 
 async function bootstrap() {
   try {
+    logger.info('Connecting to database...', {
+      host: env.POSTGRES_HOST,
+      port: env.POSTGRES_PORT,
+      database: env.POSTGRES_DATABASE,
+      user: env.POSTGRES_USER
+    });
+    
     await initDataSource();
+    logger.info('✅ Database connected successfully. All data will be stored in the configured database.');
+    
     const app = createApp();
 
     app.listen(env.PORT, () => {

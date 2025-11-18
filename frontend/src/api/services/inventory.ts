@@ -48,3 +48,62 @@ export async function fetchStockLocations() {
   const { data } = await apiClient.get('/inventory/stock-locations');
   return data;
 }
+
+export interface CreateProductInput {
+  sku: string;
+  barcode?: string | null;
+  name: string;
+  description?: string | null;
+  costPrice: number;
+  salePrice: number;
+  taxRate: number;
+  reorderPoint?: number;
+  unit?: string;
+  categoryId?: string | null;
+  supplierId?: string | null;
+  isBatchTracked?: boolean;
+  expiryTracking?: boolean;
+  variants?: Array<{
+    name: string;
+    sku: string;
+    barcode?: string | null;
+    salePrice: number;
+    costPrice: number;
+    attributes?: Record<string, string>;
+  }>;
+  batches?: Array<{
+    batchCode: string;
+    manufacturedAt?: string | null;
+    expiresAt?: string | null;
+    quantity: number;
+  }>;
+}
+
+export interface UpdateProductInput extends Partial<CreateProductInput> {}
+
+export interface Category {
+  id: string;
+  name: string;
+  description?: string | null;
+}
+
+export interface Supplier {
+  id: string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+}
+
+export async function createProduct(input: CreateProductInput): Promise<Product> {
+  const { data } = await apiClient.post<Product>('/inventory/products', input);
+  return data;
+}
+
+export async function updateProduct(id: string, input: UpdateProductInput): Promise<Product> {
+  const { data } = await apiClient.put<Product>(`/inventory/products/${id}`, input);
+  return data;
+}
+
+export async function deleteProduct(id: string): Promise<void> {
+  await apiClient.delete(`/inventory/products/${id}`);
+}

@@ -14,7 +14,7 @@ export const loginSchema = z.object({
   branchId: z
     .preprocess(normalizeOptionalBranch, z.string().trim().uuid({ message: 'Branch ID must be a valid UUID' }))
     .optional(),
-  tenantCode: z.string().trim().min(2).max(50).toLowerCase()
+  tenantCode: z.string().trim().min(2).max(50).toLowerCase() // Required - "autotab" is used for superadmin login
 });
 
 export const refreshSchema = z.object({

@@ -8,6 +8,7 @@ import { reportRouter } from '../modules/reports/report.routes';
 import { syncRouter } from '../modules/sync/sync.routes';
 import { settingsRouter } from '../modules/settings/settings.routes';
 import { tenancyRouter } from '../modules/tenancy/tenancy.routes';
+import { paymentTypesRouter } from '../modules/payment-types/payment-types.routes';
 
 export function registerRoutes(app: Express) {
   const router = Router();
@@ -21,6 +22,7 @@ export function registerRoutes(app: Express) {
   router.use('/sync', syncRouter());
   router.use('/settings', settingsRouter());
   router.use('/tenancy', tenancyRouter());
+  router.use('/payment-types', paymentTypesRouter());
 
   router.get('/health', (_req, res) =>
     res.json({ status: 'ok', timestamp: new Date().toISOString() })

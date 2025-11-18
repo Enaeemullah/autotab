@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dayjs, { ManipulateType } from 'dayjs';
+import { IsNull } from 'typeorm';
 import { Role } from '../../database/entities/role.entity';
 import { AppDataSource } from '../../database/data-source';
 import { Tenant } from '../../database/entities/tenant.entity';
@@ -58,6 +59,28 @@ export class AuthService {
   private userRepository = AppDataSource.getRepository(User);
 
   async validateCredentials(input: LoginInput) {
+    // Check if this is a superadmin login (special tenant codes)
+    // "autotab" is the primary superadmin tenant code
+    const superadminCodes = ['autotab', 'superadmin'];
+    const isSuperAdmin = superadminCodes.includes(input.tenantCode.toLowerCase());
+    
+    if (isSuperAdmin) {
+      // Superadmin login - no tenant required
+      const user = await this.userRepository.findOne({
+        where: { email: input.email, tenantId: IsNull() },
+        relations: ['roles', 'roles.permissions']
+      });
+      if (!user) {
+        throw Object.assign(new Error('Invalid credentials'), { status: 401 });
+      }
+      const isValid = await bcrypt.compare(input.password, user.passwordHash);
+      if (!isValid) {
+        throw Object.assign(new Error('Invalid credentials'), { status: 401 });
+      }
+      return { tenant: null, user, isSuperAdmin: true };
+    }
+
+    // Regular tenant login
     const tenant = await this.tenantRepository.findOne({ where: { code: input.tenantCode } });
     if (!tenant) {
       throw Object.assign(new Error('Tenant not found'), { status: 404 });
@@ -73,7 +96,7 @@ export class AuthService {
     if (!isValid) {
       throw Object.assign(new Error('Invalid credentials'), { status: 401 });
     }
-    return { tenant, user };
+    return { tenant, user, isSuperAdmin: false };
   }
 
   generateTokens(payload: {
@@ -112,10 +135,33 @@ export class AuthService {
   }
 
   async login(input: LoginInput) {
-    const { tenant, user } = await this.validateCredentials(input);
+    const { tenant, user, isSuperAdmin } = await this.validateCredentials(input);
+    
+    if (isSuperAdmin) {
+      // Superadmin login - special handling
+      const tokens = this.generateTokensForSuperAdmin(user);
+      await this.userRepository.update(user.id, { lastLoginAt: new Date(), syncState: 'synced' });
+
+      return {
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          roles: ['superadmin'],
+          permissions: ['*'] // Superadmin has all permissions
+        },
+        tenant: null,
+        branchId: null,
+        tokens,
+        isSuperAdmin: true
+      };
+    }
+
+    // Regular tenant login
     const branchId = input.branchId ?? user.branchId ?? null;
     const roles = user.roles ?? [];
-    const tokens = this.generateTokens({ user, tenantId: tenant.id, branchId, roles });
+    const tokens = this.generateTokens({ user, tenantId: tenant!.id, branchId, roles });
 
     await this.userRepository.update(user.id, { lastLoginAt: new Date(), syncState: 'pending' });
 
@@ -131,12 +177,38 @@ export class AuthService {
           .filter((value, index, array) => array.indexOf(value) === index)
       },
       tenant: {
-        id: tenant.id,
-        name: tenant.name,
-        code: tenant.code
+        id: tenant!.id,
+        name: tenant!.name,
+        code: tenant!.code
       },
       branchId,
-      tokens
+      tokens,
+      isSuperAdmin: false
+    };
+  }
+
+  generateTokensForSuperAdmin(user: User): AuthTokens {
+    const jwtPayload = {
+      sub: user.id,
+      tenantId: null,
+      branchId: null,
+      roles: ['superadmin'],
+      permissions: ['*']
+    };
+
+    const accessToken = jwt.sign(jwtPayload, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRY });
+    const refreshToken = jwt.sign(jwtPayload, env.JWT_REFRESH_SECRET, {
+      expiresIn: env.JWT_REFRESH_EXPIRY
+    });
+
+    const expiresIn = calculateExpiryTimestamp(env.JWT_EXPIRY);
+    const refreshExpiresIn = calculateExpiryTimestamp(env.JWT_REFRESH_EXPIRY);
+
+    return {
+      accessToken,
+      refreshToken,
+      expiresIn,
+      refreshExpiresIn
     };
   }
 
@@ -144,9 +216,32 @@ export class AuthService {
     try {
       const payload = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET) as {
         sub: string;
-        tenantId: string;
+        tenantId: string | null;
         branchId?: string | null;
       };
+      
+      // Handle superadmin refresh
+      if (payload.tenantId === null) {
+        const user = await this.userRepository.findOne({
+          where: { id: payload.sub, tenantId: IsNull() },
+          relations: ['roles', 'roles.permissions']
+        });
+        if (!user) {
+          throw Object.assign(new Error('User not found'), { status: 404 });
+        }
+        const tokens = this.generateTokensForSuperAdmin(user);
+        return {
+          tokens,
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName
+          }
+        };
+      }
+
+      // Regular tenant user refresh
       const user = await this.userRepository.findOne({
         where: { id: payload.sub, tenantId: payload.tenantId },
         relations: ['roles', 'roles.permissions']

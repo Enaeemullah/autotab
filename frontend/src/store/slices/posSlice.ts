@@ -12,7 +12,7 @@ export interface PosCartItem {
 }
 
 interface Payment {
-  method: 'cash' | 'card' | 'wallet' | 'bank_transfer';
+  paymentTypeId: string;
   amount: number;
   reference?: string;
 }
@@ -59,12 +59,15 @@ const posSlice = createSlice({
     clearPayments(state) {
       state.payments = [];
     },
+    removePayment(state, action: PayloadAction<number>) {
+      state.payments.splice(action.payload, 1);
+    },
     setNotes(state, action: PayloadAction<string>) {
       state.notes = action.payload;
     }
   }
 });
 
-export const { addItem, updateQuantity, removeItem, resetCart, addPayment, clearPayments, setNotes } =
+export const { addItem, updateQuantity, removeItem, resetCart, addPayment, clearPayments, removePayment, setNotes } =
   posSlice.actions;
 export default posSlice.reducer;

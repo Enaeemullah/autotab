@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import bcrypt from 'bcryptjs';
 import { AppDataSource, initDataSource } from '../data-source';
+import { env } from '../../config/environment';
 import { Tenant } from '../entities/tenant.entity';
 import { Branch } from '../entities/branch.entity';
 import { Permission } from '../entities/permission.entity';
@@ -64,6 +65,13 @@ const TEST_USERS: TestUserSeed[] = [
 ];
 
 async function seedTestUsers() {
+  console.log('\n📊 Database Configuration:');
+  console.log(`   Host: ${env.POSTGRES_HOST}`);
+  console.log(`   Port: ${env.POSTGRES_PORT}`);
+  console.log(`   Database: ${env.POSTGRES_DATABASE}`);
+  console.log(`   User: ${env.POSTGRES_USER}`);
+  console.log('   All data will be stored in the database specified above.\n');
+
   const dataSource = await initDataSource();
   const tenantRepo = dataSource.getRepository(Tenant);
   const branchRepo = dataSource.getRepository(Branch);

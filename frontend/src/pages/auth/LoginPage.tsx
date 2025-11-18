@@ -43,8 +43,9 @@ export function LoginPage() {
           accessToken: data.tokens.accessToken,
           refreshToken: data.tokens.refreshToken,
           branchId: data.branchId ?? null,
-          tenant: data.tenant,
-          user: data.user
+          tenant: data.tenant ?? null,
+          user: data.user,
+          isSuperAdmin: data.isSuperAdmin
         })
       );
     }
@@ -65,11 +66,11 @@ export function LoginPage() {
     event.preventDefault();
     setClientError(null);
 
-    const tenantCode = form.tenantCode.trim().toLowerCase();
     const email = form.email.trim().toLowerCase();
     const password = form.password;
+    const tenantCode = form.tenantCode.trim().toLowerCase();
 
-    if (!tenantCode || !email || !password) {
+    if (!email || !password || !tenantCode) {
       setClientError('Please complete all required fields.');
       return;
     }
@@ -82,9 +83,12 @@ export function LoginPage() {
       });
 
       if (result) {
+        // Superadmin should go to tenants page, regular users to dashboard
+        const isSuperAdmin = result.isSuperAdmin;
+        const defaultPath = isSuperAdmin ? '/tenants' : '/';
         const from =
           (location.state as { from?: { pathname?: string } } | undefined)?.from?.pathname ??
-          '/';
+          defaultPath;
         navigate(from, { replace: true });
       }
     } catch {
@@ -151,7 +155,7 @@ export function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700" htmlFor="tenantCode">
-                  Tenant code
+                  Tenant code *
                 </label>
                 <input
                   id="tenantCode"
@@ -160,7 +164,7 @@ export function LoginPage() {
                   onChange={handleChange}
                   autoComplete="organization"
                   required
-                  placeholder="demo-retail"
+                  placeholder="e.g., demo-retail or autotab"
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base text-slate-900 transition focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>

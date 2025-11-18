@@ -14,7 +14,7 @@ export interface SalePayload {
     taxRate?: number;
   }>;
   payments: Array<{
-    method: 'cash' | 'card' | 'wallet' | 'bank_transfer' | 'split';
+    paymentTypeId: string;
     amount: number;
     reference?: string;
   }>;

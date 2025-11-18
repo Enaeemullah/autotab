@@ -11,7 +11,7 @@ export const saleItemSchema = z.object({
 });
 
 export const paymentSchema = z.object({
-  method: z.enum(['cash', 'card', 'wallet', 'bank_transfer', 'split']),
+  paymentTypeId: z.string().uuid(),
   amount: z.coerce.number().nonnegative(),
   reference: z.string().optional().nullable(),
   meta: z.record(z.any()).optional()
@@ -22,7 +22,7 @@ export const saleSchema = z.object({
   customerPhone: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   items: z.array(saleItemSchema).min(1),
-  payments: z.array(paymentSchema).min(1),
+  payments: z.array(paymentSchema).min(1), // At least one payment required, but can be partial
   discountTotal: z.coerce.number().min(0).default(0),
   taxTotal: z.coerce.number().min(0).default(0)
 });

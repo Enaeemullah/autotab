@@ -16,7 +16,9 @@ apiClient.interceptors.request.use((config) => {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  if (state.auth.tenant?.id) {
+  // Only set tenant headers if not superadmin
+  const isSuperAdmin = state.auth.user?.roles?.includes('superadmin') || state.auth.user?.permissions?.includes('*');
+  if (!isSuperAdmin && state.auth.tenant?.id) {
     headers.set('x-tenant-id', state.auth.tenant.id);
     headers.set('x-branch-id', state.auth.branchId ?? '');
   }

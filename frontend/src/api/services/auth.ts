@@ -3,7 +3,7 @@ import { apiClient } from '../client';
 interface LoginRequest {
   email: string;
   password: string;
-  tenantCode: string;
+  tenantCode: string; // Required - "autotab" is used for superadmin login
   branchId?: string;
 }
 

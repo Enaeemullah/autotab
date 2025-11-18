@@ -23,6 +23,24 @@ export function reportRouter() {
   router.get('/user-performance', authorize({ permissions: ['reports:read'] }), (req, res) =>
     controller.userPerformance(req, res)
   );
+  router.get('/monthly-sales', authorize({ permissions: ['reports:read'] }), (req, res) =>
+    controller.monthlySales(req, res)
+  );
+  router.get('/top-products', authorize({ permissions: ['reports:read'] }), (req, res) =>
+    controller.topProducts(req, res)
+  );
+  router.get('/hourly-sales', authorize({ permissions: ['reports:read'] }), (req, res) =>
+    controller.hourlySales(req, res)
+  );
+  router.get('/top-customers', authorize({ permissions: ['reports:read'] }), (req, res) =>
+    controller.topCustomers(req, res)
+  );
+  router.get('/top-product-groups', authorize({ permissions: ['reports:read'] }), (req, res) =>
+    controller.topProductGroups(req, res)
+  );
+  router.get('/periodic-sales', authorize({ permissions: ['reports:read'] }), (req, res) =>
+    controller.periodicSales(req, res)
+  );
 
   return router;
 }

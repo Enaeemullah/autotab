@@ -4,6 +4,7 @@ import { AppDataSource } from '../../database/data-source';
 import { Sale } from '../../database/entities/sale.entity';
 import { SaleItem } from '../../database/entities/sale-item.entity';
 import { SalePayment } from '../../database/entities/sale-payment.entity';
+import { PaymentType } from '../../database/entities/payment-type.entity';
 import { Product } from '../../database/entities/product.entity';
 import { ProductVariant } from '../../database/entities/product-variant.entity';
 import { InventoryMovement } from '../../database/entities/inventory-movement.entity';
@@ -41,7 +42,7 @@ export class SalesService {
   async getById(tenantId: string, id: string) {
     const sale = await this.saleRepository.findOne({
       where: { id, tenantId },
-      relations: ['items', 'items.product', 'payments']
+      relations: ['items', 'items.product', 'payments', 'payments.paymentType']
     });
     if (!sale) {
       throw Object.assign(new Error('Sale not found'), { status: 404 });
@@ -156,12 +157,22 @@ export class SalesService {
         await movementRepo.save(movement);
       }
 
+      const paymentTypeRepo = manager.getRepository(PaymentType);
       for (const payment of parsed.payments) {
+        const paymentType = await paymentTypeRepo.findOne({
+          where: { id: payment.paymentTypeId, tenantId }
+        });
+        if (!paymentType) {
+          throw Object.assign(new Error(`Payment type not found: ${payment.paymentTypeId}`), { status: 400 });
+        }
+
         const salePayment = salePaymentRepo.create({
           tenantId,
           branchId,
           sale: savedSale,
-          method: payment.method,
+          paymentType,
+          paymentTypeId: payment.paymentTypeId,
+          method: paymentType.code, // Keep for backward compatibility
           amount: payment.amount.toFixed(4),
           receivedAt: new Date(),
           reference: payment.reference ?? null,

@@ -2,8 +2,8 @@ import { Column } from 'typeorm';
 import { BaseEntity } from './base.entity';
 
 export abstract class TenantScopedEntity extends BaseEntity {
-  @Column({ name: 'tenant_id', type: 'uuid' })
-  tenantId!: string;
+  @Column({ name: 'tenant_id', type: 'uuid', nullable: true })
+  tenantId!: string | null;
 
   @Column({ name: 'branch_id', type: 'uuid', nullable: true })
   branchId!: string | null;

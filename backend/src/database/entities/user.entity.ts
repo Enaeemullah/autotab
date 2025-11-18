@@ -26,9 +26,9 @@ export class User extends TenantScopedEntity {
   @Column({ name: 'phone', type: 'varchar', length: 50, nullable: true })
   phone!: string | null;
 
-  @ManyToOne(() => Branch, (branch) => branch.users)
+  @ManyToOne(() => Branch, (branch) => branch.users, { nullable: true })
   @JoinColumn({ name: 'branch_id' })
-  branch!: Branch;
+  branch!: Branch | null;
 
   @ManyToMany(() => Role, { cascade: true })
   @JoinTable({

@@ -36,9 +36,10 @@ const initialState: AuthState = {
 interface LoginSuccessPayload {
   accessToken: string;
   refreshToken: string;
-  tenant: TenantInfo;
+  tenant: TenantInfo | null;
   branchId: string | null;
   user: AuthUser;
+  isSuperAdmin?: boolean;
 }
 
 const authSlice = createSlice({

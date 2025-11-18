@@ -11,7 +11,10 @@
     "test": "jest --runInBand",
     "migration:run": "ts-node ./src/database/migrations/run-migrations.ts",
     "migration:generate": "ts-node ./src/database/migrations/generate-migration.ts",
-    "seed:test": "ts-node ./src/database/seeders/test-users.seeder.ts"
+    "seed:test": "ts-node ./src/database/seeders/test-users.seeder.ts",
+    "seed:admin": "ts-node ./src/database/seeders/admin.seeder.ts",
+        "seed:superadmin": "ts-node ./src/database/seeders/superadmin.seeder.ts",
+        "seed:payment-types": "ts-node ./src/database/seeders/payment-types.seeder.ts"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -23,14 +26,14 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cors": "^2.8.5",
-    "dayjs": "^1.11.10",
+    "dayjs": "^1.11.19",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-async-errors": "^3.1.1",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^1.4.5-lts.1",
     "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
     "pg": "^8.11.5",
     "reflect-metadata": "^0.2.2",
     "typeorm": "^0.3.20",

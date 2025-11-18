@@ -13,6 +13,7 @@ import { InventoryMovement } from './inventory-movement.entity';
 import { Sale } from './sale.entity';
 import { SaleItem } from './sale-item.entity';
 import { SalePayment } from './sale-payment.entity';
+import { PaymentType } from './payment-type.entity';
 import { Setting } from './setting.entity';
 import { AuditLog } from './audit-log.entity';
 import { SyncLog } from './sync-log.entity';
@@ -33,6 +34,7 @@ export const entityList = [
   Sale,
   SaleItem,
   SalePayment,
+  PaymentType,
   Setting,
   AuditLog,
   SyncLog
@@ -54,6 +56,7 @@ export {
   Sale,
   SaleItem,
   SalePayment,
+  PaymentType,
   Setting,
   AuditLog,
   SyncLog

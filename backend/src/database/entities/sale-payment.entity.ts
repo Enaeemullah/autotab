@@ -1,16 +1,22 @@
 import { Column, Entity, ManyToOne } from 'typeorm';
 import { TenantScopedEntity } from './tenant-scoped.entity';
 import { Sale } from './sale.entity';
-
-export type PaymentMethod = 'cash' | 'card' | 'wallet' | 'bank_transfer' | 'split';
+import { PaymentType } from './payment-type.entity';
 
 @Entity({ name: 'sale_payments' })
 export class SalePayment extends TenantScopedEntity {
   @ManyToOne(() => Sale, (sale) => sale.payments, { onDelete: 'CASCADE' })
   sale!: Sale;
 
-  @Column({ name: 'method', type: 'varchar', length: 50 })
-  method!: PaymentMethod;
+  @ManyToOne(() => PaymentType, { nullable: true })
+  paymentType!: PaymentType | null;
+
+  @Column({ name: 'payment_type_id', type: 'uuid', nullable: true })
+  paymentTypeId!: string | null;
+
+  // Keep method for backward compatibility, but it's now derived from paymentType
+  @Column({ name: 'method', type: 'varchar', length: 50, nullable: true })
+  method!: string | null;
 
   @Column({ name: 'amount', type: 'numeric', precision: 15, scale: 4 })
   amount!: string;
